@@ -1,9 +1,8 @@
-import { SorobanRpc, TransactionBuilder, Networks, Operation, Asset } from 'soroban-client';
+import { SorobanRpc, TransactionBuilder, Operation, Asset } from 'soroban-client';
 
 // Stellar Testnet Configuration
 const TESTNET_URL = 'https://soroban-testnet.stellar.org';
 const TESTNET_PASSPHRASE = 'Test SDF Network ; September 2015';
-const NETWORK = Networks.TESTNET;
 
 // DonáFácil configuration
 const DONATION_PERCENTAGE = 0.01; // 1%
@@ -194,4 +193,5 @@ class PaymentService {
   }
 }
 
-export default new PaymentService(); 
+const paymentService = new PaymentService();
+export default paymentService; 
