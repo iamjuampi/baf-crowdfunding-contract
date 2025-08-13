@@ -1,156 +1,227 @@
-# Local Development Guide
+# 🚀 BAF Crowdfunding Contract - Desarrollo Local
 
-This guide will help you run and test the BAF Crowdfunding Contract locally.
+Guía completa para desarrollar y probar el contrato de crowdfunding con DonáFácil en tu entorno local.
 
-## Prerequisites
+## 📋 Prerrequisitos
 
-- Rust toolchain installed
-- Stellar CLI installed (`cargo install --locked stellar-cli@23.0.0`)
-- WASM target installed (`rustup target add wasm32v1-none`)
+- **Rust** (versión 1.70+)
+- **Node.js** (versión 16+)
+- **Stellar CLI** (versión 0.12+)
+- **Freighter Wallet** (extensión de navegador)
 
-## Quick Start
+## ⚡ Inicio Rápido
 
-### 1. Setup Development Environment
-
-Run the setup command to create test accounts, build the contract, and deploy it:
-
+### 1. **Configurar el entorno**
 ```bash
-./run_local.sh setup
+# Clonar el repositorio
+git clone https://github.com/iamjuampi/baf-crowdfunding-contract.git
+cd baf-crowdfunding-contract
+
+# Configurar Rust para WASM
+rustup target add wasm32v1-none
 ```
 
-This will:
-- Generate admin, test user, and contributor accounts
-- Build and optimize the contract
-- Deploy the contract to testnet
-- Display all account addresses
+### 2. **Configurar Freighter Wallet**
+- Instala [Freighter](https://www.freighter.app/) en tu navegador
+- Cambia a **TESTNET** en la configuración de Freighter
+- Crea una nueva cuenta o importa una existente
 
-### 2. Test the Contract
-
-Run the full test suite to verify everything works:
-
+### 3. **Obtener XLM de testnet**
 ```bash
+./get_testnet_xlm.sh
+```
+Sigue las instrucciones para obtener XLM de testnet para las pruebas.
+
+### 4. **Iniciar el frontend**
+```bash
+./start_frontend.sh
+```
+El frontend estará disponible en `http://localhost:3000`
+
+## 🛒 **Funcionalidades del Frontend**
+
+### **Carrito de Compra con DonáFácil**
+- ✅ **Producto de ejemplo**: Vuelo Buenos Aires - Miami ($850 USD)
+- ✅ **DonáFácil**: Checkbox que suma automáticamente 1% para donación
+- ✅ **Pagos reales**: Integración completa con Stellar testnet
+- ✅ **Freighter Wallet**: Conexión directa con la extensión
+- ✅ **Balance en tiempo real**: Muestra el balance de XLM de tu wallet
+
+### **Flujo de Pago Completo**
+1. **Conectar Wallet**: Conecta Freighter configurado en testnet
+2. **Ver Producto**: Producto con precio en USD y XLM
+3. **DonáFácil**: Checkbox marcado por defecto suma 1%
+4. **Confirmar Donación**: Modal de confirmación al desmarcar
+5. **Pagar**: Transacción real en Stellar testnet
+6. **Confirmación**: Hash de transacción y detalles del pago
+
+## 🔧 Comandos Disponibles
+
+### **Scripts Principales**
+```bash
+# Iniciar frontend con pagos reales
+./start_frontend.sh
+
+# Obtener XLM de testnet
+./get_testnet_xlm.sh
+
+# Interactuar con el contrato
+./run_local.sh
+
+# Auditoría de seguridad
+./security_audit.sh
+
+# Flujo completo de desarrollo
+./dev_workflow.sh
+```
+
+### **Comandos del Contrato**
+```bash
+# Construir y desplegar
+./run_local.sh build
+./run_local.sh deploy
+
+# Crear campaña
+./run_local.sh create-campaign <creator_address> <goal_stroops> <min_donation_stroops>
+
+# Obtener datos de campaña
+./run_local.sh get-campaign <campaign_address>
+
+# Contribuir a campaña
+./run_local.sh contribute <contributor_address> <campaign_address> <amount_stroops>
+
+# Ejecutar suite completa de pruebas
 ./run_local.sh test
 ```
 
-This will:
-- Create a test campaign
-- Get campaign data
-- Contribute to the campaign
-- Verify the updated campaign data
+## 💰 **Conversión XLM/Stroops**
 
-## Available Commands
+- **1 XLM = 10,000,000 stroops**
+- **1 USD ≈ 0.15 XLM** (aproximado para testnet)
 
-### Build and Deploy
-
+### **Ejemplos de Conversión**
 ```bash
-# Build and optimize the contract
-./run_local.sh build
-
-# Deploy the contract to testnet
-./run_local.sh deploy
+# $850 USD = 127.5 XLM = 1,275,000,000 stroops
+# Donación 1% = $8.50 USD = 1.275 XLM = 12,750,000 stroops
+# Total = $858.50 USD = 128.775 XLM = 1,287,750,000 stroops
 ```
 
-### Campaign Management
+## 🎯 **Direcciones de Testnet**
 
+### **Cuentas de Prueba**
 ```bash
-# Create a new campaign
-./run_local.sh create-campaign <creator_address> <goal_stroops> <min_donation_stroops>
+# Admin (ya configurado)
+GDRDSX2ZOPTRCVWPBA55TXQVNRWM6RNLTLZ5YGVIJ5UXGCDPWXH4KQUL
 
-# Get campaign data
-./run_local.sh get-campaign <campaign_address>
+# Test User (generar con stellar keys)
+stellar keys generate --global test-user --network testnet --fund
 
-# Contribute to a campaign
-./run_local.sh contribute <contributor_address> <campaign_address> <amount_stroops>
-
-# Withdraw funds (creator only, when goal is reached)
-./run_local.sh withdraw <creator_address>
-
-# Refund contribution (when campaign fails)
-./run_local.sh refund <contributor_address> <campaign_address>
+# Contributor (generar con stellar keys)
+stellar keys generate --global contributor --network testnet --fund
 ```
 
-## Examples
-
-### Create a Campaign
-
+### **Contrato Desplegado**
 ```bash
-# Create a campaign with 10 XLM goal and 1 XLM minimum donation
-./run_local.sh create-campaign GDJTRJM4HWG2D4HRFJDQR3MP5LHM7EDBKW6WIYP4TR6N6GL7KBBFV426 100000000 10000000
+# ID del contrato en testnet
+CCNBIWS656R5CR2SJTQMIAMKPDSJS5V4QXLPMC6XIYJQ3GNVJMUHXZW4
 ```
 
-### Contribute to Campaign
+## 🔐 **Configuración de Seguridad**
 
+### **Freighter Wallet**
+- ✅ Configurado en **TESTNET**
+- ✅ Cuenta con XLM de testnet
+- ✅ Permisos de conexión habilitados
+
+### **Variables de Entorno**
 ```bash
-# Contribute 2 XLM to a campaign
-./run_local.sh contribute GCPPF35K2MDJT77HORBCVS34JIIZNRHYAVTQHJA6I6QPIGDH2XAD6SJ2 GDJTRJM4HWG2D4HRFJDQR3MP5LHM7EDBKW6WIYP4TR6N6GL7KBBFV426 20000000
+# Stellar Testnet
+TESTNET_URL=https://soroban-testnet.stellar.org
+TESTNET_PASSPHRASE="Test SDF Network ; September 2015"
+
+# DonáFácil
+DONATION_PERCENTAGE=0.01  # 1%
+DONATION_ADDRESS=GDRDSX2ZOPTRCVWPBA55TXQVNRWM6RNLTLZ5YGVIJ5UXGCDPWXH4KQUL
 ```
 
-### Check Campaign Status
+## 🧪 **Pruebas del Frontend**
 
+### **Prueba Completa de Pago**
+1. **Inicia el frontend**: `./start_frontend.sh`
+2. **Conecta Freighter**: Asegúrate de estar en testnet
+3. **Verifica balance**: Debe mostrar tu balance de XLM
+4. **Prueba DonáFácil**: Marca/desmarca el checkbox
+5. **Realiza pago**: Procesa una transacción real
+6. **Verifica hash**: Confirma la transacción en testnet
+
+### **Verificar Transacciones**
 ```bash
-# Get current campaign data
-./run_local.sh get-campaign GDJTRJM4HWG2D4HRFJDQR3MP5LHM7EDBKW6WIYP4TR6N6GL7KBBFV426
+# En Stellar Laboratory (testnet)
+https://laboratory.stellar.org/#explorer?network=testnet
+
+# Buscar por hash de transacción
+# Verificar estado: SUCCESS, FAILED, PENDING
 ```
 
-## Contract Information
+## 🚨 **Solución de Problemas**
 
-- **Contract ID**: `CCNBIWS656R5CR2SJTQMIAMKPDSJS5V4QXLPMC6XIYJQ3GNVJMUHXZW4`
-- **Network**: Testnet
-- **Token**: Native XLM (`CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC`)
-
-## Account Addresses
-
-After running setup, you'll have these test accounts:
-
-- **Admin**: `GDRDSX2ZOPTRCVWPBA55TXQVNRWM6RNLTLZ5YGVIJ5UXGCDPWXH4KQUL`
-- **Test User**: `GDJTRJM4HWG2D4HRFJDQR3MP5LHM7EDBKW6WIYP4TR6N6GL7KBBFV426`
-- **Contributor**: `GCPPF35K2MDJT77HORBCVS34JIIZNRHYAVTQHJA6I6QPIGDH2XAD6SJ2`
-
-## XLM to Stroops Conversion
-
-| XLM | Stroops | Description |
-|-----|---------|-------------|
-| 1 XLM | 10,000,000 | 1 XLM = 10 million stroops |
-| 5 XLM | 50,000,000 | 5 XLM in stroops |
-| 10 XLM | 100,000,000 | 10 XLM in stroops |
-| 100 XLM | 1,000,000,000 | 100 XLM in stroops |
-
-## Troubleshooting
-
-### Local Network Issues
-
-If you encounter issues with the local network, the script uses testnet by default, which is more reliable for testing.
-
-### Build Errors
-
-If you get build errors, make sure you have:
-- Rust 1.85+ installed
-- WASM target installed: `rustup target add wasm32v1-none`
-- Stellar CLI installed: `cargo install --locked stellar-cli@23.0.0`
-
-### Permission Errors
-
-Make sure the script is executable:
+### **Error: "Freighter wallet no está disponible"**
 ```bash
-chmod +x run_local.sh
+# Solución: Instalar Freighter
+# 1. Ve a https://www.freighter.app/
+# 2. Instala la extensión para tu navegador
+# 3. Configura en TESTNET
+# 4. Recarga la página
 ```
 
-## Contract Functions
+### **Error: "Por favor cambia Freighter a TESTNET"**
+```bash
+# Solución: Cambiar red en Freighter
+# 1. Abre Freighter
+# 2. Ve a Settings → Network
+# 3. Selecciona "Testnet"
+# 4. Recarga la página
+```
 
-The contract supports the following functions:
+### **Error: "Insufficient balance"**
+```bash
+# Solución: Obtener XLM de testnet
+./get_testnet_xlm.sh
+# Sigue las instrucciones para obtener XLM
+```
 
-1. **`__constructor`** - Initialize contract with admin and token
-2. **`create_campaign`** - Create a new campaign
-3. **`get_campaign`** - Get campaign data
-4. **`contribute`** - Contribute to a campaign
-5. **`withdraw`** - Withdraw funds (creator only, when goal reached)
-6. **`refund`** - Refund contribution (when campaign fails)
+### **Error: "Transaction failed"**
+```bash
+# Posibles causas:
+# 1. Balance insuficiente
+# 2. Red incorrecta (debe ser testnet)
+# 3. Fee insuficiente
+# 4. Timeout de transacción
+```
 
-## Next Steps
+## 📚 **Recursos Adicionales**
 
-Once you're comfortable with the local development setup, you can:
+### **Documentación**
+- [Stellar Documentation](https://developers.stellar.org/)
+- [Soroban Documentation](https://soroban.stellar.org/)
+- [Freighter Documentation](https://www.freighter.app/docs)
 
-1. Explore the contract source code in `contracts/baf-crowdfunding-contract/src/`
-2. Add new features or modify existing functionality
-3. Write comprehensive tests
-4. Deploy to mainnet (after thorough testing and auditing) 
+### **Herramientas**
+- [Stellar Laboratory](https://laboratory.stellar.org/)
+- [Stellar Quest](https://quest.stellar.org/)
+- [Stellar Expert](https://stellar.expert/)
+
+### **Comunidad**
+- [Stellar Discord](https://discord.gg/stellarlumens)
+- [Stellar Stack Exchange](https://stellar.stackexchange.com/)
+
+## 🎉 **¡Listo para Desarrollar!**
+
+Con esta configuración tienes:
+- ✅ Frontend funcional con pagos reales
+- ✅ Contrato desplegado en testnet
+- ✅ DonáFácil completamente operativo
+- ✅ Herramientas de desarrollo automatizadas
+- ✅ Documentación completa
+
+¡Disfruta desarrollando con Stellar y Soroban! 🚀 

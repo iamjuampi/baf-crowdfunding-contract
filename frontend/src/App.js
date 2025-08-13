@@ -1,10 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
-
-// Contract configuration
-const CONTRACT_ID = 'CCNBIWS656R5CR2SJTQMIAMKPDSJS5V4QXLPMC6XIYJQ3GNVJMUHXZW4';
-const NETWORK_URL = 'https://soroban-testnet.stellar.org';
-const NETWORK_PASSPHRASE = 'Test SDF Network ; September 2015';
+import paymentService from './services/paymentService';
 
 // Styled components
 const Container = styled.div`
@@ -302,6 +298,14 @@ const WalletInfo = styled.div`
   border-left: 4px solid #28a745;
 `;
 
+const BalanceInfo = styled.div`
+  background: #e8f5e8;
+  border-radius: 8px;
+  padding: 15px;
+  margin: 15px 0;
+  border-left: 4px solid #28a745;
+`;
+
 function App() {
   const [wallet, setWallet] = useState(null);
   const [connected, setConnected] = useState(false);
@@ -311,6 +315,7 @@ function App() {
   const [donationEnabled, setDonationEnabled] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [transactionHash, setTransactionHash] = useState('');
+  const [balance, setBalance] = useState('0');
 
   // Product data
   const product = {
@@ -324,38 +329,17 @@ function App() {
   const connectWallet = async () => {
     try {
       setLoading(true);
-      setStatus('Conectando a Stellar wallet...');
+      setStatus('Conectando a Freighter wallet...');
       
-      // Check if Freighter is available
-      if (typeof window.freighterApi !== 'undefined') {
-        try {
-          const isConnected = await window.freighterApi.isConnected();
-          if (!isConnected) {
-            await window.freighterApi.connect();
-          }
-          const publicKey = await window.freighterApi.getPublicKey();
-          setWallet({
-            publicKey: publicKey,
-            isConnected: true,
-            type: 'freighter'
-          });
-          setConnected(true);
-          setStatus('Conectado a Freighter wallet exitosamente!', 'success');
-        } catch (error) {
-          console.log('Freighter no disponible o usuario rechazó conexión');
-        }
-      }
+      const walletInfo = await paymentService.connectWallet();
+      setWallet(walletInfo);
+      setConnected(true);
       
-      // If Freighter is not available, use demo wallet
-      if (!connected) {
-        setWallet({
-          publicKey: 'GDJTRJM4HWG2D4HRFJDQR3MP5LHM7EDBKW6WIYP4TR6N6GL7KBBFV426',
-          isConnected: true,
-          type: 'demo'
-        });
-        setConnected(true);
-        setStatus('Usando wallet demo para testing. ¡Instala Freighter para transacciones reales!', 'info');
-      }
+      // Get balance
+      const accountBalance = await paymentService.getBalance(walletInfo.publicKey);
+      setBalance(accountBalance);
+      
+      setStatus('Conectado a Freighter wallet exitosamente!', 'success');
     } catch (error) {
       setStatus(`Error conectando wallet: ${error.message}`, 'error');
     } finally {
@@ -381,38 +365,29 @@ function App() {
   };
 
   const calculateTotal = () => {
-    const basePrice = product.price;
-    const donationAmount = donationEnabled ? basePrice * 0.01 : 0;
-    return basePrice + donationAmount;
-  };
-
-  const formatUSD = (amount) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
-  const formatXLM = (usdAmount) => {
-    // Approximate conversion: 1 USD ≈ 0.15 XLM (example rate)
-    const xlmAmount = usdAmount * 0.15;
-    return xlmAmount.toFixed(2);
+    const amounts = paymentService.calculatePaymentAmounts(product.price, donationEnabled);
+    return amounts;
   };
 
   const processPayment = async () => {
     try {
       setLoading(true);
-      setStatus('Procesando pago...');
+      setStatus('Procesando pago con Stellar...');
       
-      // Simulate payment processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      const amounts = calculateTotal();
       
-      // Generate mock transaction hash
-      const mockHash = 'txn_' + Math.random().toString(36).substr(2, 9).toUpperCase();
-      setTransactionHash(mockHash);
+      // Process real payment
+      const result = await paymentService.processPayment(amounts, donationEnabled);
       
+      setTransactionHash(result.hash);
       setShowPaymentModal(true);
-      setStatus('Pago procesado exitosamente!', 'success');
+      setStatus('Pago procesado exitosamente en testnet!', 'success');
+      
+      // Update balance
+      if (wallet?.publicKey) {
+        const newBalance = await paymentService.getBalance(wallet.publicKey);
+        setBalance(newBalance);
+      }
     } catch (error) {
       setStatus(`Error procesando pago: ${error.message}`, 'error');
     } finally {
@@ -424,6 +399,8 @@ function App() {
     setShowPaymentModal(false);
     setTransactionHash('');
   };
+
+  const amounts = calculateTotal();
 
   return (
     <Container>
@@ -437,17 +414,23 @@ function App() {
           <h2>Conecta tu Wallet</h2>
           <p>Conecta tu wallet de Stellar para continuar con la compra.</p>
           <p><strong>Recomendado:</strong> Instala <a href="https://www.freighter.app/" target="_blank" rel="noopener noreferrer">Freighter</a> para la mejor experiencia.</p>
+          <p><strong>Importante:</strong> Asegúrate de que Freighter esté configurado en <strong>TESTNET</strong>.</p>
           <ConnectButton onClick={connectWallet} disabled={loading}>
-            {loading ? 'Conectando...' : 'Conectar Wallet'}
+            {loading ? 'Conectando...' : 'Conectar Freighter Wallet'}
           </ConnectButton>
         </div>
       ) : (
         <>
           <WalletInfo>
             <p><strong>Wallet:</strong> {wallet?.publicKey}</p>
-            <p><strong>Tipo:</strong> {wallet?.type === 'freighter' ? 'Freighter' : 'Demo Wallet'}</p>
-            <p><strong>Red:</strong> Testnet</p>
+            <p><strong>Red:</strong> {wallet?.network}</p>
+            <p><strong>Estado:</strong> Conectado</p>
           </WalletInfo>
+
+          <BalanceInfo>
+            <p><strong>Balance XLM:</strong> {paymentService.formatXLM(balance)} XLM</p>
+            <p><strong>Balance USD:</strong> {paymentService.formatUSD(balance / 0.15)}</p>
+          </BalanceInfo>
 
           <MainContent>
             <ProductSection>
@@ -457,7 +440,7 @@ function App() {
                 <ProductInfo>
                   <ProductTitle>{product.name}</ProductTitle>
                   <ProductDescription>{product.description}</ProductDescription>
-                  <ProductPrice>{formatUSD(product.price)}</ProductPrice>
+                  <ProductPrice>{paymentService.formatUSD(product.price)}</ProductPrice>
                 </ProductInfo>
               </ProductCard>
             </ProductSection>
@@ -466,8 +449,13 @@ function App() {
               <CartTitle>Resumen de Compra</CartTitle>
               
               <CartItem>
-                <CartItemLabel>Subtotal</CartItemLabel>
-                <CartItemValue>{formatUSD(product.price)}</CartItemValue>
+                <CartItemLabel>Subtotal USD</CartItemLabel>
+                <CartItemValue>{paymentService.formatUSD(amounts.baseAmountUSD)}</CartItemValue>
+              </CartItem>
+
+              <CartItem>
+                <CartItemLabel>Subtotal XLM</CartItemLabel>
+                <CartItemValue>{paymentService.formatXLM(amounts.baseAmount)} XLM</CartItemValue>
               </CartItem>
 
               <DonationCheckbox>
@@ -485,20 +473,26 @@ function App() {
               </DonationCheckbox>
 
               {donationEnabled && (
-                <CartItem>
-                  <CartItemLabel>Donación (1%)</CartItemLabel>
-                  <CartItemValue>{formatUSD(product.price * 0.01)}</CartItemValue>
-                </CartItem>
+                <>
+                  <CartItem>
+                    <CartItemLabel>Donación USD (1%)</CartItemLabel>
+                    <CartItemValue>{paymentService.formatUSD(amounts.donationAmountUSD)}</CartItemValue>
+                  </CartItem>
+                  <CartItem>
+                    <CartItemLabel>Donación XLM (1%)</CartItemLabel>
+                    <CartItemValue>{paymentService.formatXLM(amounts.donationAmount)} XLM</CartItemValue>
+                  </CartItem>
+                </>
               )}
 
               <TotalSection>
                 <TotalRow>
                   <CartItemLabel>Total USD</CartItemLabel>
-                  <CartItemValue>{formatUSD(calculateTotal())}</CartItemValue>
+                  <CartItemValue>{paymentService.formatUSD(amounts.totalAmountUSD)}</CartItemValue>
                 </TotalRow>
                 <FinalTotal>
                   <CartItemLabel>Total XLM</CartItemLabel>
-                  <CartItemValue>{formatXLM(calculateTotal())} XLM</CartItemValue>
+                  <CartItemValue>{paymentService.formatXLM(amounts.totalAmount)} XLM</CartItemValue>
                 </FinalTotal>
               </TotalSection>
 
@@ -533,11 +527,13 @@ function App() {
         <Modal>
           <ModalContent>
             <ModalTitle>¡Compra Confirmada!</ModalTitle>
-            <p>Tu pago ha sido procesado exitosamente.</p>
+            <p>Tu pago ha sido procesado exitosamente en Stellar testnet.</p>
             <p><strong>Hash de Transacción:</strong></p>
             <p style={{ fontFamily: 'monospace', background: '#f8f9fa', padding: '10px', borderRadius: '5px', wordBreak: 'break-all' }}>
               {transactionHash}
             </p>
+            <p><strong>Monto Total:</strong> {paymentService.formatXLM(amounts.totalAmount)} XLM</p>
+            <p><strong>Donación:</strong> {donationEnabled ? 'Sí' : 'No'}</p>
             <ModalButtons>
               <ModalButton className="primary" onClick={closePaymentModal}>
                 Cerrar
