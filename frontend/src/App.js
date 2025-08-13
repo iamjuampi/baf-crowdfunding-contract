@@ -138,15 +138,10 @@ function App() {
     }
   };
 
-  // Process payment with Stellar SDK
+  // Process payment with Stellar Contract
   const processPayment = async () => {
     if (!walletConnected) {
       alert('Por favor conecta tu wallet primero');
-      return;
-    }
-
-    if (walletBalance < totalAmountXLM) {
-      alert(`Saldo insuficiente. Necesitas ${totalAmountXLM.toFixed(2)} XLM pero tienes ${walletBalance.toFixed(2)} XLM`);
       return;
     }
 
@@ -161,19 +156,36 @@ function App() {
       // Load account to get sequence number
       const account = await server.loadAccount(walletAddress);
       
-      // Create payment operation
-      const paymentOp = Operation.payment({
-        destination: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF', // Test destination
-        asset: Asset.native(),
-        amount: totalAmountXLM.toFixed(7) // Stellar uses 7 decimal places
+      // Contract parameters
+      const contractId = 'CARUYQDY6POZSMUFCGJZCHFMQIDTMAO35JWWPJAYUWCUHOHAZDOJC2UC';
+      const contributor = 'GBG4WISAIK5PVGXSIHF7PGLPYT4SBTK7PUQIN76WONJIBJRYPSI2ZM3I';
+      const campaignAddress = 'GBAPH22BDWNPPKY3Q7PUS2EY34TPRWJ53OGYKGZ55TSCQBGTQZ2AW66V';
+      const amount = '500'; // Amount in stroops
+      
+      // Create contract invoke operation
+      const contractOp = Operation.invokeHostFunction({
+        hostFunction: {
+          type: 'InvokeContract',
+          contractId: contractId,
+          functionName: 'contribute',
+          args: [
+            // Contributor address
+            { type: 'Address', address: { type: 'Account', accountId: contributor } },
+            // Campaign address  
+            { type: 'Address', address: { type: 'Account', accountId: campaignAddress } },
+            // Amount
+            { type: 'I128', i128: { lo: amount, hi: 0 } }
+          ]
+        },
+        auth: []
       });
 
       // Build transaction
       const transaction = new TransactionBuilder(account, {
-        fee: '100',
+        fee: '100000', // Higher fee for contract operations
         networkPassphrase: Networks.TESTNET
       })
-        .addOperation(paymentOp)
+        .addOperation(contractOp)
         .setTimeout(30)
         .build();
 
@@ -185,7 +197,7 @@ function App() {
 
       // Submit transaction
       const response = await server.submitTransaction(signedTransaction);
-      console.log('Transaction submitted:', response.hash);
+      console.log('Contract transaction submitted:', response.hash);
       
       setTransactionHash(response.hash);
       setShowSuccessModal(true);
@@ -194,8 +206,8 @@ function App() {
       await updateBalance(walletAddress);
       
     } catch (error) {
-      console.error('Error processing payment:', error);
-      alert('Error al procesar el pago: ' + error.message);
+      console.error('Error processing contract payment:', error);
+      alert('Error al procesar el pago del contrato: ' + error.message);
     } finally {
       setIsProcessing(false);
     }
@@ -446,44 +458,24 @@ function App() {
           )}
 
           {/* Action Buttons */}
-          {!walletConnected ? (
-            <button 
-              onClick={connectWallet}
-              style={{
-                width: '100%',
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                border: 'none',
-                padding: '15px',
-                borderRadius: '8px',
-                fontSize: '1.1rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                marginTop: '20px'
-              }}
-            >
-              Conectar Freighter Wallet
-            </button>
-          ) : (
-            <button 
-              onClick={processPayment}
-              disabled={isProcessing}
-              style={{
-                width: '100%',
-                background: isProcessing ? '#95a5a6' : 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)',
-                color: 'white',
-                border: 'none',
-                padding: '15px',
-                borderRadius: '8px',
-                fontSize: '1.1rem',
-                fontWeight: 600,
-                cursor: isProcessing ? 'not-allowed' : 'pointer',
-                marginTop: '20px'
-              }}
-            >
-              {isProcessing ? 'Procesando Pago...' : 'Pagar con Stellar'}
-            </button>
-          )}
+          <button 
+            onClick={walletConnected ? processPayment : connectWallet}
+            disabled={isProcessing}
+            style={{
+              width: '100%',
+              background: isProcessing ? '#95a5a6' : 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)',
+              color: 'white',
+              border: 'none',
+              padding: '15px',
+              borderRadius: '8px',
+              fontSize: '1.1rem',
+              fontWeight: 600,
+              cursor: isProcessing ? 'not-allowed' : 'pointer',
+              marginTop: '20px'
+            }}
+          >
+            {isProcessing ? 'Procesando Pago...' : 'Pagar'}
+          </button>
         </div>
       </div>
 
@@ -581,10 +573,10 @@ function App() {
               ✅
             </div>
             <h3 style={{ margin: '0 0 20px 0', color: '#27ae60' }}>
-              ¡Compra Confirmada!
+              ¡Contrato Ejecutado!
             </h3>
             <p style={{ margin: '0 0 15px 0', color: '#7f8c8d' }}>
-              Tu pago ha sido procesado exitosamente en la red Stellar testnet.
+              La transacción del contrato ha sido procesada exitosamente en la red Stellar testnet.
             </p>
             <div style={{
               background: '#f8f9fa',
