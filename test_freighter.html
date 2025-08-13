@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Freighter Wallet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .status {
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #0056b3; }
+        .log {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Test Freighter Wallet</h1>
+        
+        <div id="status" class="status info">
+            Verificando Freighter Wallet...
+        </div>
+        
+        <div>
+            <button onclick="checkFreighter()">🔍 Verificar Freighter</button>
+            <button onclick="connectWallet()">🔗 Conectar Wallet</button>
+            <button onclick="getPublicKey()">🔑 Obtener Clave Pública</button>
+            <button onclick="clearLog()">🗑️ Limpiar Log</button>
+        </div>
+        
+        <h3>Log de Eventos:</h3>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `[${timestamp}] ${message}\n`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        function updateStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`;
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        function checkFreighter() {
+            log('🔍 Verificando Freighter Wallet...');
+            
+            // Check multiple possible APIs
+            const checks = [
+                { name: 'window.freighterApi', value: window.freighterApi },
+                { name: 'window.freighter', value: window.freighter },
+                { name: 'document.querySelector', value: document.querySelector('script[src*="freighter"]') }
+            ];
+
+            let found = false;
+            checks.forEach(check => {
+                if (check.value) {
+                    log(`✅ ${check.name}: ENCONTRADO`);
+                    found = true;
+                } else {
+                    log(`❌ ${check.name}: NO ENCONTRADO`);
+                }
+            });
+
+            if (found) {
+                updateStatus('Freighter Wallet detectado', 'success');
+                log('🎉 Freighter Wallet está disponible');
+            } else {
+                updateStatus('Freighter Wallet NO detectado', 'error');
+                log('⚠️ Freighter Wallet no está instalado o no se detecta');
+            }
+        }
+
+        async function connectWallet() {
+            log('🔗 Intentando conectar con Freighter...');
+            
+            try {
+                let freighterApi = window.freighterApi || window.freighter;
+                
+                if (!freighterApi) {
+                    throw new Error('Freighter API no encontrada');
+                }
+
+                log('📡 Freighter API encontrada, verificando conexión...');
+
+                // Check if connected
+                let isConnected = false;
+                try {
+                    isConnected = await freighterApi.isConnected();
+                    log(`📊 Estado de conexión: ${isConnected}`);
+                } catch (e) {
+                    log(`⚠️ No se pudo verificar estado de conexión: ${e.message}`);
+                }
+
+                if (!isConnected) {
+                    log('🔌 Intentando conectar...');
+                    try {
+                        await freighterApi.connect();
+                        log('✅ Conexión exitosa');
+                    } catch (e) {
+                        log(`⚠️ Método connect() no disponible: ${e.message}`);
+                    }
+                }
+
+                updateStatus('Wallet conectada', 'success');
+                
+            } catch (error) {
+                log(`❌ Error al conectar: ${error.message}`);
+                updateStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function getPublicKey() {
+            log('🔑 Obteniendo clave pública...');
+            
+            try {
+                let freighterApi = window.freighterApi || window.freighter;
+                
+                if (!freighterApi) {
+                    throw new Error('Freighter API no encontrada');
+                }
+
+                const publicKey = await freighterApi.getPublicKey();
+                log(`✅ Clave pública obtenida: ${publicKey}`);
+                log(`📝 Longitud: ${publicKey.length} caracteres`);
+                log(`🔗 Formato: ${publicKey.startsWith('G') ? 'Válido (empieza con G)' : 'Formato inesperado'}`);
+                
+                updateStatus(`Clave pública: ${publicKey.substring(0, 8)}...`, 'success');
+                
+            } catch (error) {
+                log(`❌ Error al obtener clave pública: ${error.message}`);
+                updateStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            log('🚀 Página cargada, verificando Freighter...');
+            setTimeout(checkFreighter, 1000);
+        });
+
+        // Listen for Freighter events
+        window.addEventListener('message', (event) => {
+            if (event.source !== window) return;
+            if (event.data.type && event.data.type.startsWith('FREIGHTER_')) {
+                log(`📨 Evento Freighter: ${event.data.type}`);
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -1,349 +1,203 @@
 import React, { useState } from 'react';
-import styled from 'styled-components';
-import paymentService from './services/paymentService';
-
-// Styled components
-const Container = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 20px;
-  min-height: 100vh;
-  background: #f8f9fa;
-`;
-
-const Header = styled.header`
-  text-align: center;
-  margin-bottom: 30px;
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-`;
-
-const Title = styled.h1`
-  font-size: 2.5rem;
-  margin-bottom: 10px;
-  color: #2c3e50;
-`;
-
-const Subtitle = styled.p`
-  font-size: 1.1rem;
-  color: #7f8c8d;
-`;
-
-const MainContent = styled.div`
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 30px;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
-`;
-
-const ProductSection = styled.div`
-  background: white;
-  border-radius: 10px;
-  padding: 30px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-`;
-
-const ProductCard = styled.div`
-  border: 1px solid #e1e8ed;
-  border-radius: 10px;
-  padding: 20px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-`;
-
-const ProductImage = styled.div`
-  width: 100px;
-  height: 100px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 2rem;
-`;
-
-const ProductInfo = styled.div`
-  flex: 1;
-`;
-
-const ProductTitle = styled.h3`
-  margin: 0 0 10px 0;
-  color: #2c3e50;
-  font-size: 1.3rem;
-`;
-
-const ProductDescription = styled.p`
-  color: #7f8c8d;
-  margin: 0 0 10px 0;
-  line-height: 1.5;
-`;
-
-const ProductPrice = styled.div`
-  font-size: 1.5rem;
-  font-weight: bold;
-  color: #27ae60;
-`;
-
-const CartSection = styled.div`
-  background: white;
-  border-radius: 10px;
-  padding: 30px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-  height: fit-content;
-  position: sticky;
-  top: 20px;
-`;
-
-const CartTitle = styled.h2`
-  margin: 0 0 20px 0;
-  color: #2c3e50;
-  font-size: 1.5rem;
-`;
-
-const CartItem = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 15px 0;
-  border-bottom: 1px solid #ecf0f1;
-  
-  &:last-child {
-    border-bottom: none;
-  }
-`;
-
-const CartItemLabel = styled.span`
-  color: #7f8c8d;
-`;
-
-const CartItemValue = styled.span`
-  font-weight: bold;
-  color: #2c3e50;
-`;
-
-const TotalSection = styled.div`
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 2px solid #ecf0f1;
-`;
-
-const TotalRow = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 0;
-  font-size: 1.1rem;
-`;
-
-const FinalTotal = styled(TotalRow)`
-  font-size: 1.3rem;
-  font-weight: bold;
-  color: #27ae60;
-  border-top: 1px solid #ecf0f1;
-  padding-top: 15px;
-  margin-top: 15px;
-`;
-
-const DonationCheckbox = styled.div`
-  margin: 20px 0;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 2px solid #e9ecef;
-`;
-
-const CheckboxContainer = styled.label`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  cursor: pointer;
-  font-size: 1.1rem;
-  font-weight: 500;
-  color: #2c3e50;
-`;
-
-const Checkbox = styled.input`
-  width: 20px;
-  height: 20px;
-  accent-color: #27ae60;
-`;
-
-const DonationInfo = styled.p`
-  margin: 10px 0 0 0;
-  color: #7f8c8d;
-  font-size: 0.9rem;
-`;
-
-const PaymentButton = styled.button`
-  width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  padding: 15px;
-  border-radius: 8px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  margin-top: 20px;
-  
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-  }
-  
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
-
-const ConnectButton = styled(PaymentButton)`
-  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-  font-size: 1.2rem;
-  padding: 20px;
-`;
-
-const Modal = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-`;
-
-const ModalContent = styled.div`
-  background: white;
-  padding: 30px;
-  border-radius: 10px;
-  max-width: 400px;
-  width: 90%;
-  text-align: center;
-`;
-
-const ModalTitle = styled.h3`
-  margin: 0 0 20px 0;
-  color: #2c3e50;
-`;
-
-const ModalButtons = styled.div`
-  display: flex;
-  gap: 15px;
-  justify-content: center;
-  margin-top: 20px;
-`;
-
-const ModalButton = styled.button`
-  padding: 10px 20px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  font-weight: 600;
-  
-  &.primary {
-    background: #e74c3c;
-    color: white;
-  }
-  
-  &.secondary {
-    background: #95a5a6;
-    color: white;
-  }
-`;
-
-const Status = styled.div`
-  padding: 15px;
-  border-radius: 8px;
-  margin: 10px 0;
-  font-weight: 500;
-  
-  &.success {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
-  }
-  
-  &.error {
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
-  }
-  
-  &.info {
-    background: #d1ecf1;
-    color: #0c5460;
-    border: 1px solid #bee5eb;
-  }
-`;
-
-const WalletInfo = styled.div`
-  background: #f8f9fa;
-  border-radius: 8px;
-  padding: 15px;
-  margin: 15px 0;
-  border-left: 4px solid #28a745;
-`;
-
-const BalanceInfo = styled.div`
-  background: #e8f5e8;
-  border-radius: 8px;
-  padding: 15px;
-  margin: 15px 0;
-  border-left: 4px solid #28a745;
-`;
+import { Server, Networks, TransactionBuilder, Operation, Asset } from '@stellar/stellar-sdk';
 
 function App() {
-  const [wallet, setWallet] = useState(null);
-  const [connected, setConnected] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState('');
-  const [showDonationModal, setShowDonationModal] = useState(false);
+  console.log('App component is rendering with shopping cart!');
+  
   const [donationEnabled, setDonationEnabled] = useState(true);
-  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showDonationModal, setShowDonationModal] = useState(false);
+  const [walletConnected, setWalletConnected] = useState(false);
+  const [walletAddress, setWalletAddress] = useState('');
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [transactionHash, setTransactionHash] = useState('');
-  const [balance, setBalance] = useState('0');
 
   // Product data
   const product = {
-    id: 1,
     name: "Vuelo Buenos Aires - Miami",
     description: "Vuelo directo en clase económica, incluye equipaje de mano. Fecha: 15 de Diciembre 2024",
     price: 850, // USD
     image: "✈️"
   };
 
+  // Calculate amounts
+  const baseAmountUSD = product.price;
+  const baseAmountXLM = baseAmountUSD * 0.15; // Approximate conversion
+  const donationAmountUSD = donationEnabled ? baseAmountUSD * 0.01 : 0;
+  const donationAmountXLM = donationEnabled ? baseAmountXLM * 0.01 : 0;
+  const totalAmountUSD = baseAmountUSD + donationAmountUSD;
+  const totalAmountXLM = baseAmountXLM + donationAmountXLM;
+
+  // Check if Freighter is installed - improved detection
+  const isFreighterInstalled = () => {
+    return typeof window !== 'undefined' && 
+           (window.freighterApi || 
+            window.freighter || 
+            document.querySelector('script[src*="freighter"]'));
+  };
+
+  // Connect to Freighter - improved connection
   const connectWallet = async () => {
     try {
-      setLoading(true);
-      setStatus('Conectando a Freighter wallet...');
+      console.log('Attempting to connect to Freighter...');
       
-      const walletInfo = await paymentService.connectWallet();
-      setWallet(walletInfo);
-      setConnected(true);
+      // Check multiple possible Freighter APIs
+      let freighterApi = null;
       
+      if (window.freighterApi) {
+        freighterApi = window.freighterApi;
+        console.log('Found freighterApi');
+      } else if (window.freighter) {
+        freighterApi = window.freighter;
+        console.log('Found freighter');
+      } else {
+        console.log('Freighter not found, checking for extension...');
+        
+        // Try to detect if Freighter extension is installed
+        const isInstalled = await checkFreighterExtension();
+        if (!isInstalled) {
+          alert('Freighter Wallet no está instalado. Por favor instala la extensión desde https://www.freighter.app/');
+          return;
+        }
+        
+        // Wait a bit and try again
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        if (window.freighterApi) {
+          freighterApi = window.freighterApi;
+        } else if (window.freighter) {
+          freighterApi = window.freighter;
+        }
+      }
+
+      if (!freighterApi) {
+        alert('No se pudo conectar con Freighter Wallet. Asegúrate de que esté instalado y activo.');
+        return;
+      }
+
+      // Check connection status
+      let isConnected = false;
+      try {
+        isConnected = await freighterApi.isConnected();
+      } catch (e) {
+        console.log('isConnected not available, trying to connect directly');
+      }
+
+      if (!isConnected) {
+        try {
+          await freighterApi.connect();
+          console.log('Connected to Freighter');
+        } catch (e) {
+          console.log('Connect failed, trying alternative method');
+          // Some versions don't have connect method
+        }
+      }
+
+      // Get public key
+      const publicKey = await freighterApi.getPublicKey();
+      console.log('Got public key:', publicKey);
+      setWalletAddress(publicKey);
+      setWalletConnected(true);
+
       // Get balance
-      const accountBalance = await paymentService.getBalance(walletInfo.publicKey);
-      setBalance(accountBalance);
+      await updateBalance(publicKey);
       
-      setStatus('Conectado a Freighter wallet exitosamente!', 'success');
     } catch (error) {
-      setStatus(`Error conectando wallet: ${error.message}`, 'error');
+      console.error('Error connecting wallet:', error);
+      alert(`Error al conectar con Freighter Wallet: ${error.message}`);
+    }
+  };
+
+  // Check if Freighter extension is installed
+  const checkFreighterExtension = async () => {
+    try {
+      // Try to inject a script to detect Freighter
+      const script = document.createElement('script');
+      script.src = 'chrome-extension://ajamhkmhgnjfhnhmlbmmhkmhkmhkmhkm/scripts/inpage.js';
+      document.head.appendChild(script);
+      
+      // Wait for potential injection
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      return window.freighterApi || window.freighter;
+    } catch (e) {
+      return false;
+    }
+  };
+
+  // Update wallet balance
+  const updateBalance = async (address) => {
+    try {
+      const server = new Server('https://horizon-testnet.stellar.org');
+      const account = await server.loadAccount(address);
+      const xlmBalance = account.balances.find(b => b.asset_type === 'native');
+      setWalletBalance(parseFloat(xlmBalance.balance));
+    } catch (error) {
+      console.error('Error fetching balance:', error);
+      setWalletBalance(0);
+    }
+  };
+
+  // Process payment with Stellar SDK
+  const processPayment = async () => {
+    if (!walletConnected) {
+      alert('Por favor conecta tu wallet primero');
+      return;
+    }
+
+    if (walletBalance < totalAmountXLM) {
+      alert(`Saldo insuficiente. Necesitas ${totalAmountXLM.toFixed(2)} XLM pero tienes ${walletBalance.toFixed(2)} XLM`);
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      // Get Freighter API
+      const freighterApi = window.freighterApi || window.freighter;
+      
+      // Initialize Stellar server
+      const server = new Server('https://horizon-testnet.stellar.org');
+      
+      // Load account to get sequence number
+      const account = await server.loadAccount(walletAddress);
+      
+      // Create payment operation
+      const paymentOp = Operation.payment({
+        destination: 'GAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWHF', // Test destination
+        asset: Asset.native(),
+        amount: totalAmountXLM.toFixed(7) // Stellar uses 7 decimal places
+      });
+
+      // Build transaction
+      const transaction = new TransactionBuilder(account, {
+        fee: '100',
+        networkPassphrase: Networks.TESTNET
+      })
+        .addOperation(paymentOp)
+        .setTimeout(30)
+        .build();
+
+      // Sign transaction with Freighter
+      const signedTransaction = await freighterApi.signTransaction(
+        transaction.toXDR(),
+        Networks.TESTNET
+      );
+
+      // Submit transaction
+      const response = await server.submitTransaction(signedTransaction);
+      console.log('Transaction submitted:', response.hash);
+      
+      setTransactionHash(response.hash);
+      setShowSuccessModal(true);
+      
+      // Update balance
+      await updateBalance(walletAddress);
+      
+    } catch (error) {
+      console.error('Error processing payment:', error);
+      alert('Error al procesar el pago: ' + error.message);
     } finally {
-      setLoading(false);
+      setIsProcessing(false);
     }
   };
 
@@ -364,191 +218,406 @@ function App() {
     setShowDonationModal(false);
   };
 
-  const calculateTotal = () => {
-    const amounts = paymentService.calculatePaymentAmounts(product.price, donationEnabled);
-    return amounts;
-  };
-
-  const processPayment = async () => {
-    try {
-      setLoading(true);
-      setStatus('Procesando pago con Stellar...');
-      
-      const amounts = calculateTotal();
-      
-      // Process real payment
-      const result = await paymentService.processPayment(amounts, donationEnabled);
-      
-      setTransactionHash(result.hash);
-      setShowPaymentModal(true);
-      setStatus('Pago procesado exitosamente en testnet!', 'success');
-      
-      // Update balance
-      if (wallet?.publicKey) {
-        const newBalance = await paymentService.getBalance(wallet.publicKey);
-        setBalance(newBalance);
-      }
-    } catch (error) {
-      setStatus(`Error procesando pago: ${error.message}`, 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const closePaymentModal = () => {
-    setShowPaymentModal(false);
+  const closeSuccessModal = () => {
+    setShowSuccessModal(false);
     setTransactionHash('');
   };
 
-  const amounts = calculateTotal();
-
   return (
-    <Container>
-      <Header>
-        <Title>🛒 Carrito de Compra</Title>
-        <Subtitle>Paga con Stellar de forma segura y rápida</Subtitle>
-      </Header>
+    <div style={{ 
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '20px',
+      minHeight: '100vh',
+      background: '#f8f9fa'
+    }}>
+      {/* Header */}
+      <header style={{
+        textAlign: 'center',
+        marginBottom: '30px',
+        background: 'white',
+        padding: '20px',
+        borderRadius: '10px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+      }}>
+        <h1 style={{ fontSize: '2.5rem', marginBottom: '10px', color: '#2c3e50' }}>
+          🛒 Carrito de Compra
+        </h1>
+        <p style={{ fontSize: '1.1rem', color: '#7f8c8d' }}>
+          Paga con Stellar de forma segura y rápida
+        </p>
+      </header>
 
-      {!connected ? (
-        <div style={{ textAlign: 'center', background: 'white', padding: '40px', borderRadius: '10px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)' }}>
-          <h2>Conecta tu Wallet</h2>
-          <p>Conecta tu wallet de Stellar para continuar con la compra.</p>
-          <p><strong>Recomendado:</strong> Instala <a href="https://www.freighter.app/" target="_blank" rel="noopener noreferrer">Freighter</a> para la mejor experiencia.</p>
-          <p><strong>Importante:</strong> Asegúrate de que Freighter esté configurado en <strong>TESTNET</strong>.</p>
-          <ConnectButton onClick={connectWallet} disabled={loading}>
-            {loading ? 'Conectando...' : 'Conectar Freighter Wallet'}
-          </ConnectButton>
+      {/* Main Content */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr',
+        gap: '30px'
+      }}>
+        {/* Product Section */}
+        <div style={{
+          background: 'white',
+          borderRadius: '10px',
+          padding: '30px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        }}>
+          <h2>Producto</h2>
+          <div style={{
+            border: '1px solid #e1e8ed',
+            borderRadius: '10px',
+            padding: '20px',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '20px'
+          }}>
+            <div style={{
+              width: '100px',
+              height: '100px',
+              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'white',
+              fontSize: '2rem'
+            }}>
+              {product.image}
+            </div>
+            <div style={{ flex: 1 }}>
+              <h3 style={{ margin: '0 0 10px 0', color: '#2c3e50', fontSize: '1.3rem' }}>
+                {product.name}
+              </h3>
+              <p style={{ color: '#7f8c8d', margin: '0 0 10px 0', lineHeight: 1.5 }}>
+                {product.description}
+              </p>
+              <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#27ae60' }}>
+                ${baseAmountUSD.toFixed(2)} USD
+              </div>
+            </div>
+          </div>
         </div>
-      ) : (
-        <>
-          <WalletInfo>
-            <p><strong>Wallet:</strong> {wallet?.publicKey}</p>
-            <p><strong>Red:</strong> {wallet?.network}</p>
-            <p><strong>Estado:</strong> Conectado</p>
-          </WalletInfo>
 
-          <BalanceInfo>
-            <p><strong>Balance XLM:</strong> {paymentService.formatXLM(balance)} XLM</p>
-            <p><strong>Balance USD:</strong> {paymentService.formatUSD(balance / 0.15)}</p>
-          </BalanceInfo>
+        {/* Cart Section */}
+        <div style={{
+          background: 'white',
+          borderRadius: '10px',
+          padding: '30px',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+          height: 'fit-content',
+          position: 'sticky',
+          top: '20px'
+        }}>
+          <h2 style={{ margin: '0 0 20px 0', color: '#2c3e50', fontSize: '1.5rem' }}>
+            Resumen de Compra
+          </h2>
+          
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '15px 0',
+            borderBottom: '1px solid #ecf0f1'
+          }}>
+            <span style={{ color: '#7f8c8d' }}>Subtotal USD</span>
+            <span style={{ fontWeight: 'bold', color: '#2c3e50' }}>${baseAmountUSD.toFixed(2)}</span>
+          </div>
 
-          <MainContent>
-            <ProductSection>
-              <h2>Producto</h2>
-              <ProductCard>
-                <ProductImage>{product.image}</ProductImage>
-                <ProductInfo>
-                  <ProductTitle>{product.name}</ProductTitle>
-                  <ProductDescription>{product.description}</ProductDescription>
-                  <ProductPrice>{paymentService.formatUSD(product.price)}</ProductPrice>
-                </ProductInfo>
-              </ProductCard>
-            </ProductSection>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '15px 0',
+            borderBottom: '1px solid #ecf0f1'
+          }}>
+            <span style={{ color: '#7f8c8d' }}>Subtotal XLM</span>
+            <span style={{ fontWeight: 'bold', color: '#2c3e50' }}>{baseAmountXLM.toFixed(2)} XLM</span>
+          </div>
 
-            <CartSection>
-              <CartTitle>Resumen de Compra</CartTitle>
-              
-              <CartItem>
-                <CartItemLabel>Subtotal USD</CartItemLabel>
-                <CartItemValue>{paymentService.formatUSD(amounts.baseAmountUSD)}</CartItemValue>
-              </CartItem>
+          <div style={{
+            marginTop: '20px',
+            padding: '20px',
+            background: '#f8f9fa',
+            borderRadius: '8px',
+            border: '2px solid #e9ecef'
+          }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px',
+              cursor: 'pointer',
+              fontSize: '1.1rem',
+              fontWeight: 500,
+              color: '#2c3e50'
+            }}>
+              <input
+                type="checkbox"
+                checked={donationEnabled}
+                onChange={handleDonationToggle}
+                style={{
+                  width: '20px',
+                  height: '20px',
+                  accentColor: '#27ae60'
+                }}
+              />
+              <div>
+                <strong>DonáFácil</strong>
+                <p style={{ margin: '10px 0 0 0', color: '#7f8c8d', fontSize: '0.9rem' }}>
+                  Suma un 1% adicional para donación. ¡Ayuda a hacer el mundo mejor!
+                </p>
+              </div>
+            </label>
+          </div>
 
-              <CartItem>
-                <CartItemLabel>Subtotal XLM</CartItemLabel>
-                <CartItemValue>{paymentService.formatXLM(amounts.baseAmount)} XLM</CartItemValue>
-              </CartItem>
+          {donationEnabled && (
+            <>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '15px 0',
+                borderBottom: '1px solid #ecf0f1'
+              }}>
+                <span style={{ color: '#7f8c8d' }}>Donación USD (1%)</span>
+                <span style={{ fontWeight: 'bold', color: '#2c3e50' }}>${donationAmountUSD.toFixed(2)}</span>
+              </div>
 
-              <DonationCheckbox>
-                <CheckboxContainer>
-                  <Checkbox
-                    type="checkbox"
-                    checked={donationEnabled}
-                    onChange={handleDonationToggle}
-                  />
-                  <div>
-                    <strong>DonáFácil</strong>
-                    <DonationInfo>Suma un 1% adicional para donación. ¡Ayuda a hacer el mundo mejor!</DonationInfo>
-                  </div>
-                </CheckboxContainer>
-              </DonationCheckbox>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                padding: '15px 0',
+                borderBottom: '1px solid #ecf0f1'
+              }}>
+                <span style={{ color: '#7f8c8d' }}>Donación XLM (1%)</span>
+                <span style={{ fontWeight: 'bold', color: '#2c3e50' }}>{donationAmountXLM.toFixed(2)} XLM</span>
+              </div>
+            </>
+          )}
 
-              {donationEnabled && (
-                <>
-                  <CartItem>
-                    <CartItemLabel>Donación USD (1%)</CartItemLabel>
-                    <CartItemValue>{paymentService.formatUSD(amounts.donationAmountUSD)}</CartItemValue>
-                  </CartItem>
-                  <CartItem>
-                    <CartItemLabel>Donación XLM (1%)</CartItemLabel>
-                    <CartItemValue>{paymentService.formatXLM(amounts.donationAmount)} XLM</CartItemValue>
-                  </CartItem>
-                </>
-              )}
+          <div style={{
+            marginTop: '20px',
+            paddingTop: '20px',
+            borderTop: '2px solid #ecf0f1'
+          }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '10px 0',
+              fontSize: '1.1rem'
+            }}>
+              <span style={{ color: '#7f8c8d' }}>Total USD</span>
+              <span style={{ fontWeight: 'bold', color: '#2c3e50' }}>${totalAmountUSD.toFixed(2)}</span>
+            </div>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '10px 0',
+              fontSize: '1.3rem',
+              fontWeight: 'bold',
+              color: '#27ae60',
+              borderTop: '1px solid #ecf0f1',
+              paddingTop: '15px',
+              marginTop: '15px'
+            }}>
+              <span style={{ color: '#7f8c8d' }}>Total XLM</span>
+              <span>{totalAmountXLM.toFixed(2)} XLM</span>
+            </div>
+          </div>
 
-              <TotalSection>
-                <TotalRow>
-                  <CartItemLabel>Total USD</CartItemLabel>
-                  <CartItemValue>{paymentService.formatUSD(amounts.totalAmountUSD)}</CartItemValue>
-                </TotalRow>
-                <FinalTotal>
-                  <CartItemLabel>Total XLM</CartItemLabel>
-                  <CartItemValue>{paymentService.formatXLM(amounts.totalAmount)} XLM</CartItemValue>
-                </FinalTotal>
-              </TotalSection>
+          {/* Wallet Status */}
+          {walletConnected && (
+            <div style={{
+              marginTop: '20px',
+              padding: '15px',
+              background: '#e8f5e8',
+              borderRadius: '8px',
+              border: '1px solid #27ae60'
+            }}>
+              <p style={{ margin: '0 0 5px 0', fontSize: '0.9rem', color: '#27ae60' }}>
+                <strong>Wallet Conectada:</strong> {walletAddress.substring(0, 8)}...{walletAddress.substring(walletAddress.length - 8)}
+              </p>
+              <p style={{ margin: '0', fontSize: '0.9rem', color: '#27ae60' }}>
+                <strong>Saldo:</strong> {walletBalance.toFixed(2)} XLM
+              </p>
+            </div>
+          )}
 
-              <PaymentButton onClick={processPayment} disabled={loading}>
-                {loading ? 'Procesando...' : 'Pagar con Stellar'}
-              </PaymentButton>
-            </CartSection>
-          </MainContent>
-        </>
-      )}
+          {/* Action Buttons */}
+          {!walletConnected ? (
+            <button 
+              onClick={connectWallet}
+              style={{
+                width: '100%',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+                border: 'none',
+                padding: '15px',
+                borderRadius: '8px',
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                marginTop: '20px'
+              }}
+            >
+              Conectar Freighter Wallet
+            </button>
+          ) : (
+            <button 
+              onClick={processPayment}
+              disabled={isProcessing}
+              style={{
+                width: '100%',
+                background: isProcessing ? '#95a5a6' : 'linear-gradient(135deg, #27ae60 0%, #2ecc71 100%)',
+                color: 'white',
+                border: 'none',
+                padding: '15px',
+                borderRadius: '8px',
+                fontSize: '1.1rem',
+                fontWeight: 600,
+                cursor: isProcessing ? 'not-allowed' : 'pointer',
+                marginTop: '20px'
+              }}
+            >
+              {isProcessing ? 'Procesando Pago...' : 'Pagar con Stellar'}
+            </button>
+          )}
+        </div>
+      </div>
 
       {/* Donation Confirmation Modal */}
       {showDonationModal && (
-        <Modal>
-          <ModalContent>
-            <ModalTitle>¿Estás seguro de que NO querés donar?</ModalTitle>
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '30px',
+            borderRadius: '10px',
+            maxWidth: '400px',
+            width: '90%',
+            textAlign: 'center'
+          }}>
+            <h3 style={{ margin: '0 0 20px 0', color: '#2c3e50' }}>
+              ¿Estás seguro de que NO querés donar?
+            </h3>
             <p>Al desmarcar DonáFácil, no se sumará el 1% adicional a tu compra.</p>
-            <ModalButtons>
-              <ModalButton className="secondary" onClick={cancelDonationDisable}>
+            <div style={{
+              display: 'flex',
+              gap: '15px',
+              justifyContent: 'center',
+              marginTop: '20px'
+            }}>
+              <button 
+                style={{
+                  padding: '10px 20px',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  background: '#95a5a6',
+                  color: 'white'
+                }}
+                onClick={cancelDonationDisable}
+              >
                 NO
-              </ModalButton>
-              <ModalButton className="primary" onClick={confirmDonationDisable}>
+              </button>
+              <button 
+                style={{
+                  padding: '10px 20px',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                  fontWeight: 600,
+                  background: '#e74c3c',
+                  color: 'white'
+                }}
+                onClick={confirmDonationDisable}
+              >
                 SÍ
-              </ModalButton>
-            </ModalButtons>
-          </ModalContent>
-        </Modal>
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
-      {/* Payment Confirmation Modal */}
-      {showPaymentModal && (
-        <Modal>
-          <ModalContent>
-            <ModalTitle>¡Compra Confirmada!</ModalTitle>
-            <p>Tu pago ha sido procesado exitosamente en Stellar testnet.</p>
-            <p><strong>Hash de Transacción:</strong></p>
-            <p style={{ fontFamily: 'monospace', background: '#f8f9fa', padding: '10px', borderRadius: '5px', wordBreak: 'break-all' }}>
-              {transactionHash}
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000
+        }}>
+          <div style={{
+            background: 'white',
+            padding: '30px',
+            borderRadius: '10px',
+            maxWidth: '500px',
+            width: '90%',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              fontSize: '4rem',
+              marginBottom: '20px'
+            }}>
+              ✅
+            </div>
+            <h3 style={{ margin: '0 0 20px 0', color: '#27ae60' }}>
+              ¡Compra Confirmada!
+            </h3>
+            <p style={{ margin: '0 0 15px 0', color: '#7f8c8d' }}>
+              Tu pago ha sido procesado exitosamente en la red Stellar testnet.
             </p>
-            <p><strong>Monto Total:</strong> {paymentService.formatXLM(amounts.totalAmount)} XLM</p>
-            <p><strong>Donación:</strong> {donationEnabled ? 'Sí' : 'No'}</p>
-            <ModalButtons>
-              <ModalButton className="primary" onClick={closePaymentModal}>
-                Cerrar
-              </ModalButton>
-            </ModalButtons>
-          </ModalContent>
-        </Modal>
+            <div style={{
+              background: '#f8f9fa',
+              padding: '15px',
+              borderRadius: '8px',
+              marginBottom: '20px',
+              wordBreak: 'break-all'
+            }}>
+              <p style={{ margin: '0 0 5px 0', fontSize: '0.9rem', color: '#7f8c8d' }}>
+                <strong>Transaction Hash:</strong>
+              </p>
+              <p style={{ margin: '0', fontSize: '0.8rem', color: '#2c3e50', fontFamily: 'monospace' }}>
+                {transactionHash}
+              </p>
+            </div>
+            <button 
+              onClick={closeSuccessModal}
+              style={{
+                padding: '10px 20px',
+                border: 'none',
+                borderRadius: '5px',
+                cursor: 'pointer',
+                fontWeight: 600,
+                background: '#27ae60',
+                color: 'white'
+              }}
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
       )}
-
-      {status && (
-        <Status className={status.includes('Error') ? 'error' : status.includes('exitosamente') ? 'success' : 'info'}>
-          {status}
-        </Status>
-      )}
-    </Container>
+    </div>
   );
 }
 

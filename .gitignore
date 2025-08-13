@@ -4,3 +4,15 @@ target
 # Local settings
 .soroban
 .stellar
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/target/
+**/node_modules
+**/dist
+**/build
+**/target
+**/node_modules
+**/dist
+**/build
+**/targets
